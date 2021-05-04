@@ -20,18 +20,21 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>soul-client-dubbo</artifactId>
         <groupId>org.dromara</groupId>
-        <version>2.2.1</version>
+        <artifactId>soul-client-dubbo</artifactId>
+        <version>2.3.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>soul-client-apache-dubbo</artifactId>
 
+    <properties>
+        <apache.dubbo.version>2.7.0</apache.dubbo.version>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.dromara</groupId>
-            <artifactId>soul-client-common</artifactId>
+            <artifactId>soul-client-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -42,7 +45,7 @@
         <dependency>
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo</artifactId>
-            <version>2.7.0</version>
+            <version>${apache.dubbo.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -60,6 +63,22 @@
             <artifactId>spring-core</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>5.2.5.Final</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>el-api</artifactId>
+            <version>2.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-
 </project>

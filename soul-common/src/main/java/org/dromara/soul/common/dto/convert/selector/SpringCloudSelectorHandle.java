@@ -17,6 +17,7 @@
 
 package org.dromara.soul.common.dto.convert.selector;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -25,9 +26,13 @@ import java.io.Serializable;
  * The type Spring cloud selector handle.
  *
  * @author xiaoyu(Myth)
+ * @author nuo-promise
  */
 @Data
+@Builder
 public class SpringCloudSelectorHandle implements Serializable {
+
+    private static final long serialVersionUID = -5325946855733519631L;
 
     /**
      * this is register eureka serviceId.

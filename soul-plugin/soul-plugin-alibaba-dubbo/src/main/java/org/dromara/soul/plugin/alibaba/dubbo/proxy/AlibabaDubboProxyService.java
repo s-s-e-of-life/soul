@@ -20,14 +20,17 @@ package org.dromara.soul.plugin.alibaba.dubbo.proxy;
 import com.alibaba.dubbo.config.ReferenceConfig;
 import com.alibaba.dubbo.rpc.service.GenericException;
 import com.alibaba.dubbo.rpc.service.GenericService;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dromara.soul.common.dto.MetaData;
 import org.dromara.soul.common.exception.SoulException;
+import org.dromara.soul.common.utils.ParamCheckUtils;
 import org.dromara.soul.plugin.alibaba.dubbo.cache.ApplicationConfigCache;
-import org.dromara.soul.plugin.api.dubbo.DubboParamResolveService;
+import org.dromara.soul.plugin.api.param.BodyParamResolveService;
+
+import java.util.Objects;
 
 /**
  * Alibaba dubbo proxy service is  use GenericService.
@@ -37,15 +40,15 @@ import org.dromara.soul.plugin.api.dubbo.DubboParamResolveService;
 @Slf4j
 public class AlibabaDubboProxyService {
     
-    private final DubboParamResolveService dubboParamResolveService;
+    private final BodyParamResolveService bodyParamResolveService;
     
     /**
      * Instantiates a new Dubbo proxy service.
      *
-     * @param dubboParamResolveService the generic param resolve service
+     * @param bodyParamResolveService the generic param resolve service
      */
-    public AlibabaDubboProxyService(final DubboParamResolveService dubboParamResolveService) {
-        this.dubboParamResolveService = dubboParamResolveService;
+    public AlibabaDubboProxyService(final BodyParamResolveService bodyParamResolveService) {
+        this.bodyParamResolveService = bodyParamResolveService;
     }
     
     /**
@@ -64,16 +67,16 @@ public class AlibabaDubboProxyService {
         }
         GenericService genericService = reference.get();
         try {
-            if (null == body || "".equals(body) || "{}".equals(body) || "null".equals(body)) {
-                return genericService.$invoke(metaData.getMethodName(), new String[]{}, new Object[]{});
+            Pair<String[], Object[]> pair;
+            if (ParamCheckUtils.dubboBodyIsEmpty(body)) {
+                pair = new ImmutablePair<>(new String[]{}, new Object[]{});
             } else {
-                Pair<String[], Object[]> pair = dubboParamResolveService.buildParameter(body, metaData.getParameterTypes());
-                return genericService.$invoke(metaData.getMethodName(), pair.getLeft(), pair.getRight());
+                pair = bodyParamResolveService.buildParameter(body, metaData.getParameterTypes());
             }
+            return genericService.$invoke(metaData.getMethodName(), pair.getLeft(), pair.getRight());
         } catch (GenericException e) {
             log.error("dubbo invoker have exception", e);
-            throw new SoulException(e.getMessage());
+            throw new SoulException(e.getExceptionMessage());
         }
     }
-    
 }

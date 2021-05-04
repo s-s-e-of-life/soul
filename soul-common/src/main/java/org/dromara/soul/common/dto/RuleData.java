@@ -20,6 +20,7 @@
 package org.dromara.soul.common.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -37,8 +38,11 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Accessors(chain = true)
 public class RuleData implements Serializable {
+
+    private static final long serialVersionUID = -7997663169659437227L;
 
     private String id;
 

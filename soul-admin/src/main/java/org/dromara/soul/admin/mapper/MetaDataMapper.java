@@ -19,8 +19,8 @@ package org.dromara.soul.admin.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.dromara.soul.admin.entity.MetaDataDO;
-import org.dromara.soul.admin.query.MetaDataQuery;
+import org.dromara.soul.admin.model.entity.MetaDataDO;
+import org.dromara.soul.admin.model.query.MetaDataQuery;
 
 import java.util.List;
 
@@ -40,14 +40,12 @@ public interface MetaDataMapper {
      */
     MetaDataDO selectById(String id);
 
-
     /**
      * Find all list.
      *
      * @return the list
      */
     List<MetaDataDO> findAll();
-
 
     /**
      * Find by path meta data do.
@@ -65,7 +63,6 @@ public interface MetaDataMapper {
      * @return the meta data do
      */
     MetaDataDO findByServiceNameAndMethod(@Param("serviceName") String serviceName, @Param("methodName") String methodName);
-
 
     /**
      * Select by query list.
@@ -98,7 +95,6 @@ public interface MetaDataMapper {
      */
     int insert(MetaDataDO metaDataDO);
 
-
     /**
      * Update int.
      *
@@ -106,7 +102,6 @@ public interface MetaDataMapper {
      * @return the int
      */
     int update(MetaDataDO metaDataDO);
-
 
     /**
      * Update enable int.

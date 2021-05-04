@@ -18,7 +18,11 @@
 package org.dromara.soul.springboot.starter.plugin.springcloud;
 
 import org.dromara.soul.plugin.api.SoulPlugin;
+import org.dromara.soul.plugin.api.context.SoulContextDecorator;
+import org.dromara.soul.plugin.base.handler.PluginDataHandler;
 import org.dromara.soul.plugin.springcloud.SpringCloudPlugin;
+import org.dromara.soul.plugin.springcloud.context.SpringCloudSoulContextDecorator;
+import org.dromara.soul.plugin.springcloud.handler.SpringCloudPluginDataHandler;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -49,5 +53,25 @@ public class SpringCloudPluginConfiguration {
     @Bean
     public SoulPlugin springCloudPlugin(final ObjectProvider<LoadBalancerClient> loadBalancerClient) {
         return new SpringCloudPlugin(loadBalancerClient.getIfAvailable());
+    }
+
+    /**
+     * Spring cloud dubbo soul context decorator soul context decorator.
+     *
+     * @return the soul context decorator
+     */
+    @Bean
+    public SoulContextDecorator springCloudDubboSoulContextDecorator() {
+        return new SpringCloudSoulContextDecorator();
+    }
+
+    /**
+     * Spring cloud plugin data handler.
+     *
+     * @return the plugin data handler
+     */
+    @Bean
+    public PluginDataHandler springCloudPluginDataHandler() {
+        return new SpringCloudPluginDataHandler();
     }
 }

@@ -50,6 +50,11 @@ public enum RpcTypeEnum {
     SOFA("sofa", true),
 
     /**
+     * Tars rpc type enum.
+     */
+    TARS("tars", true),
+
+    /**
      * Web socket rpc type enum.
      */
     WEB_SOCKET("websocket", true),
@@ -62,12 +67,12 @@ public enum RpcTypeEnum {
     /**
      * motan.
      */
-    MOTAN("motan", false),
+    MOTAN("motan", true),
 
     /**
      * grpc.
      */
-    GRPC("grpc", false);
+    GRPC("grpc", true);
 
 
     private final String name;
@@ -82,6 +87,24 @@ public enum RpcTypeEnum {
     public static List<RpcTypeEnum> acquireSupports() {
         return Arrays.stream(RpcTypeEnum.values())
                 .filter(e -> e.support).collect(Collectors.toList());
+    }
+
+    /**
+     * acquire operator support URI RPC type.
+     *
+     * @return operator support.
+     */
+    public static List<RpcTypeEnum> acquireSupportURIs() {
+        return Arrays.asList(RpcTypeEnum.GRPC, RpcTypeEnum.HTTP, RpcTypeEnum.TARS);
+    }
+
+    /**
+     * acquire operator support Metadata RPC type.
+     *
+     * @return operator support.
+     */
+    public static List<RpcTypeEnum> acquireSupportMetadatas() {
+        return Arrays.asList(RpcTypeEnum.DUBBO, RpcTypeEnum.GRPC, RpcTypeEnum.HTTP, RpcTypeEnum.SPRING_CLOUD, RpcTypeEnum.SOFA, RpcTypeEnum.TARS);
     }
 
     /**

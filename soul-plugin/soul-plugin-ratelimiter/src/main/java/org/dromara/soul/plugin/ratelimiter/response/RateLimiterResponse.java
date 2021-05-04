@@ -31,16 +31,14 @@ import java.io.Serializable;
 @RequiredArgsConstructor
 public class RateLimiterResponse implements Serializable {
 
+    private static final long serialVersionUID = 2896271355629004718L;
+
     private final boolean allowed;
 
     private final long tokensRemaining;
 
     @Override
     public String toString() {
-        return "Response{" + "allowed=" + allowed
-                + ", tokensRemaining=" + tokensRemaining
-                + '}';
-
+        return "Response{" + "allowed=" + allowed + ", tokensRemaining=" + tokensRemaining + '}';
     }
-
 }

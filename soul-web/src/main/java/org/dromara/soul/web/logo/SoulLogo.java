@@ -17,7 +17,6 @@
 
 package org.dromara.soul.web.logo;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.dromara.soul.common.constant.Constants;
 import org.dromara.soul.common.utils.VersionUtils;
@@ -25,6 +24,8 @@ import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEven
 import org.springframework.boot.context.logging.LoggingApplicationListener;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * the soul logo.
@@ -45,7 +46,7 @@ public class SoulLogo implements ApplicationListener<ApplicationEnvironmentPrepa
             + "                    \n"
             + "                   \n";
 
-    private volatile AtomicBoolean alreadyLog = new AtomicBoolean(false);
+    private final AtomicBoolean alreadyLog = new AtomicBoolean(false);
 
     @Override
     public void onApplicationEvent(final ApplicationEnvironmentPreparedEvent event) {
@@ -63,5 +64,4 @@ public class SoulLogo implements ApplicationListener<ApplicationEnvironmentPrepa
                 + " :: Soul :: (v" + VersionUtils.getVersion(getClass(), "2.0.2") + ")"
                 + Constants.LINE_SEPARATOR;
     }
-
 }

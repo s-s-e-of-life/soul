@@ -20,6 +20,7 @@
 package org.dromara.soul.common.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -36,7 +37,9 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class SelectorData implements Serializable {
+    private static final long serialVersionUID = 760613690421794874L;
 
     private String id;
 
@@ -63,7 +66,7 @@ public class SelectorData implements Serializable {
 
     private Boolean enabled;
 
-    private Boolean loged;
+    private Boolean logged;
 
     private Boolean continued;
 

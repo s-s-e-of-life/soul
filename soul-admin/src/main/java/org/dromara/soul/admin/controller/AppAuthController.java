@@ -18,17 +18,17 @@
 package org.dromara.soul.admin.controller;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dromara.soul.admin.dto.AppAuthDTO;
-import org.dromara.soul.admin.dto.AuthApplyDTO;
-import org.dromara.soul.admin.dto.AuthPathWarpDTO;
-import org.dromara.soul.admin.dto.BatchCommonDTO;
-import org.dromara.soul.admin.page.CommonPager;
-import org.dromara.soul.admin.page.PageParameter;
-import org.dromara.soul.admin.query.AppAuthQuery;
-import org.dromara.soul.admin.result.SoulAdminResult;
+import org.dromara.soul.admin.model.dto.AppAuthDTO;
+import org.dromara.soul.admin.model.dto.AuthApplyDTO;
+import org.dromara.soul.admin.model.dto.AuthPathWarpDTO;
+import org.dromara.soul.admin.model.dto.BatchCommonDTO;
+import org.dromara.soul.admin.model.page.CommonPager;
+import org.dromara.soul.admin.model.page.PageParameter;
+import org.dromara.soul.admin.model.query.AppAuthQuery;
+import org.dromara.soul.admin.model.result.SoulAdminResult;
 import org.dromara.soul.admin.service.AppAuthService;
 import org.dromara.soul.admin.utils.SoulResultMessage;
-import org.dromara.soul.admin.vo.AppAuthVO;
+import org.dromara.soul.admin.model.vo.AppAuthVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -61,7 +61,7 @@ public class AppAuthController {
     }
 
     /**
-     * Apply soul result.
+     * Apply App auth.
      *
      * @param authApplyDTO the auth apply dto
      * @return the soul result
@@ -70,13 +70,12 @@ public class AppAuthController {
     public SoulAdminResult apply(@RequestBody final AuthApplyDTO authApplyDTO) {
         if (StringUtils.isNoneBlank(authApplyDTO.getAppKey())) {
             return appAuthService.applyUpdate(authApplyDTO);
-        } else {
-            return appAuthService.applyCreate(authApplyDTO);
         }
+        return appAuthService.applyCreate(authApplyDTO);
     }
 
     /**
-     * Update sk soul result.
+     * Update sk of App auth.
      *
      * @param appKey    the app key
      * @param appSecret the app secret
@@ -88,7 +87,7 @@ public class AppAuthController {
     }
 
     /**
-     * Find page by query soul result.
+     * Find App auth page by query.
      *
      * @param appKey the app key
      * @param phone  specific phone
@@ -107,7 +106,7 @@ public class AppAuthController {
     }
 
     /**
-     * Detail soul result.
+     * Get detail of App auth.
      *
      * @param id the id
      * @return the soul result
@@ -118,7 +117,7 @@ public class AppAuthController {
     }
 
     /**
-     * Update detail soul result.
+     * Update App auth.
      *
      * @param appAuthDTO the app auth dto
      * @return the soul result
@@ -129,7 +128,7 @@ public class AppAuthController {
     }
 
     /**
-     * Detail path soul result.
+     * Detail path of App auth.
      *
      * @param id the id
      * @return the soul result
@@ -140,7 +139,7 @@ public class AppAuthController {
     }
 
     /**
-     * Update detail path soul result.
+     * Update detail path.
      *
      * @param authPathWarpDTO the auth path warp dto
      * @return the soul result
@@ -163,7 +162,7 @@ public class AppAuthController {
     }
 
     /**
-     * Batch enabled soul result.
+     * Batch enabled App auth.
      *
      * @param batchCommonDTO the batch common dto
      * @return the soul result
@@ -178,7 +177,7 @@ public class AppAuthController {
     }
 
     /**
-     * Sync data soul result.
+     * Sync App auth data.
      *
      * @return the soul result
      */

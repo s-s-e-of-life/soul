@@ -17,31 +17,32 @@
 
 package org.dromara.soul.admin.service.impl;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
-import org.dromara.soul.admin.dto.RuleConditionDTO;
-import org.dromara.soul.admin.dto.RuleDTO;
-import org.dromara.soul.admin.entity.PluginDO;
-import org.dromara.soul.admin.entity.RuleConditionDO;
-import org.dromara.soul.admin.entity.RuleDO;
-import org.dromara.soul.admin.entity.SelectorDO;
+import org.dromara.soul.admin.interceptor.annotation.DataPermission;
+import org.dromara.soul.admin.mapper.DataPermissionMapper;
+import org.dromara.soul.admin.model.dto.DataPermissionDTO;
+import org.dromara.soul.admin.model.dto.RuleConditionDTO;
+import org.dromara.soul.admin.model.dto.RuleDTO;
+import org.dromara.soul.admin.model.entity.DataPermissionDO;
+import org.dromara.soul.admin.model.entity.PluginDO;
+import org.dromara.soul.admin.model.entity.RuleConditionDO;
+import org.dromara.soul.admin.model.entity.RuleDO;
+import org.dromara.soul.admin.model.entity.SelectorDO;
 import org.dromara.soul.admin.listener.DataChangedEvent;
 import org.dromara.soul.admin.mapper.PluginMapper;
 import org.dromara.soul.admin.mapper.RuleConditionMapper;
 import org.dromara.soul.admin.mapper.RuleMapper;
 import org.dromara.soul.admin.mapper.SelectorMapper;
-import org.dromara.soul.admin.page.CommonPager;
-import org.dromara.soul.admin.page.PageParameter;
-import org.dromara.soul.admin.page.PageResultUtils;
-import org.dromara.soul.admin.query.RuleConditionQuery;
-import org.dromara.soul.admin.query.RuleQuery;
+import org.dromara.soul.admin.model.page.CommonPager;
+import org.dromara.soul.admin.model.page.PageResultUtils;
+import org.dromara.soul.admin.model.query.RuleConditionQuery;
+import org.dromara.soul.admin.model.query.RuleQuery;
 import org.dromara.soul.admin.service.RuleService;
 import org.dromara.soul.admin.transfer.ConditionTransfer;
-import org.dromara.soul.admin.vo.RuleConditionVO;
-import org.dromara.soul.admin.vo.RuleVO;
+import org.dromara.soul.admin.model.vo.RuleConditionVO;
+import org.dromara.soul.admin.model.vo.RuleVO;
+import org.dromara.soul.admin.utils.JwtUtils;
+import org.dromara.soul.common.constant.AdminConstants;
 import org.dromara.soul.common.dto.ConditionData;
 import org.dromara.soul.common.dto.RuleData;
 import org.dromara.soul.common.enums.ConfigGroupEnum;
@@ -50,6 +51,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * RuleServiceImpl.
@@ -68,6 +74,8 @@ public class RuleServiceImpl implements RuleService {
 
     private final PluginMapper pluginMapper;
 
+    private final DataPermissionMapper dataPermissionMapper;
+
     private final ApplicationEventPublisher eventPublisher;
 
     @Autowired(required = false)
@@ -75,11 +83,13 @@ public class RuleServiceImpl implements RuleService {
                            final RuleConditionMapper ruleConditionMapper,
                            final SelectorMapper selectorMapper,
                            final PluginMapper pluginMapper,
+                           final DataPermissionMapper dataPermissionMapper,
                            final ApplicationEventPublisher eventPublisher) {
         this.ruleMapper = ruleMapper;
         this.ruleConditionMapper = ruleConditionMapper;
         this.selectorMapper = selectorMapper;
         this.pluginMapper = pluginMapper;
+        this.dataPermissionMapper = dataPermissionMapper;
         this.eventPublisher = eventPublisher;
     }
 
@@ -112,6 +122,13 @@ public class RuleServiceImpl implements RuleService {
         List<RuleConditionDTO> ruleConditions = ruleDTO.getRuleConditions();
         if (StringUtils.isEmpty(ruleDTO.getId())) {
             ruleCount = ruleMapper.insertSelective(ruleDO);
+            if (dataPermissionMapper.listByUserId(JwtUtils.getUserId()).size() > 0) {
+                DataPermissionDTO dataPermissionDTO = new DataPermissionDTO();
+                dataPermissionDTO.setUserId(JwtUtils.getUserId());
+                dataPermissionDTO.setDataId(ruleDO.getId());
+                dataPermissionDTO.setDataType(AdminConstants.RULE_DATA_TYPE);
+                dataPermissionMapper.insertSelective(DataPermissionDO.buildPermissionDO(dataPermissionDTO));
+            }
             ruleConditions.forEach(ruleConditionDTO -> {
                 ruleConditionDTO.setRuleId(ruleDO.getId());
                 ruleConditionMapper.insertSelective(RuleConditionDO.buildRuleConditionDO(ruleConditionDTO));
@@ -140,13 +157,15 @@ public class RuleServiceImpl implements RuleService {
     @Transactional(rollbackFor = Exception.class)
     public int delete(final List<String> ids) {
         for (String id : ids) {
-            RuleDO ruleDO = ruleMapper.selectById(id);
-            SelectorDO selectorDO = selectorMapper.selectById(ruleDO.getSelectorId());
-            PluginDO pluginDO = pluginMapper.selectById(selectorDO.getPluginId());
+            final RuleDO ruleDO = ruleMapper.selectById(id);
+            final SelectorDO selectorDO = selectorMapper.selectById(ruleDO.getSelectorId());
+            final PluginDO pluginDO = pluginMapper.selectById(selectorDO.getPluginId());
+
             ruleMapper.delete(id);
             ruleConditionMapper.deleteByQuery(new RuleConditionQuery(id));
+            dataPermissionMapper.deleteByDataId(id);
 
-            //发送删规则事件
+            // send deleted rule event
             eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.RULE, DataEventTypeEnum.DELETE,
                     Collections.singletonList(RuleDO.transFrom(ruleDO, pluginDO.getName(), null))));
         }
@@ -175,10 +194,11 @@ public class RuleServiceImpl implements RuleService {
      * @return {@linkplain CommonPager}
      */
     @Override
+    @DataPermission(dataType = AdminConstants.DATA_PERMISSION_RULE)
     public CommonPager<RuleVO> listByPage(final RuleQuery ruleQuery) {
-        PageParameter pageParameter = ruleQuery.getPageParameter();
-        Integer count = ruleMapper.countByQuery(ruleQuery);
-        return PageResultUtils.result(pageParameter, count, () -> ruleMapper.selectByQuery(ruleQuery).stream().map(RuleVO::buildRuleVO).collect(Collectors.toList()));
+        return PageResultUtils.result(ruleQuery.getPageParameter(),
+            () -> ruleMapper.countByQuery(ruleQuery),
+            () -> ruleMapper.selectByQuery(ruleQuery).stream().map(RuleVO::buildRuleVO).collect(Collectors.toList()));
     }
 
     @Override
@@ -228,5 +248,4 @@ public class RuleServiceImpl implements RuleService {
         }
         return RuleDO.transFrom(ruleDO, pluginDO.getName(), conditions);
     }
-
 }

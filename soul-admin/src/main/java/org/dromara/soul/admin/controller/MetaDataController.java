@@ -18,15 +18,15 @@
 package org.dromara.soul.admin.controller;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dromara.soul.admin.dto.BatchCommonDTO;
-import org.dromara.soul.admin.dto.MetaDataDTO;
-import org.dromara.soul.admin.page.CommonPager;
-import org.dromara.soul.admin.page.PageParameter;
-import org.dromara.soul.admin.query.MetaDataQuery;
-import org.dromara.soul.admin.result.SoulAdminResult;
+import org.dromara.soul.admin.model.dto.BatchCommonDTO;
+import org.dromara.soul.admin.model.dto.MetaDataDTO;
+import org.dromara.soul.admin.model.page.CommonPager;
+import org.dromara.soul.admin.model.page.PageParameter;
+import org.dromara.soul.admin.model.query.MetaDataQuery;
+import org.dromara.soul.admin.model.result.SoulAdminResult;
 import org.dromara.soul.admin.service.MetaDataService;
 import org.dromara.soul.admin.utils.SoulResultMessage;
-import org.dromara.soul.admin.vo.MetaDataVO;
+import org.dromara.soul.admin.model.vo.MetaDataVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,7 +59,7 @@ public class MetaDataController {
     }
 
     /**
-     * Query list soul result.
+     * Query metadata list.
      *
      * @param appName     the app name
      * @param currentPage the current page
@@ -73,7 +73,7 @@ public class MetaDataController {
     }
 
     /**
-     * Find all soul result.
+     * Find all metadata.
      *
      * @return the soul result
      */
@@ -83,7 +83,7 @@ public class MetaDataController {
     }
 
     /**
-     * Find all group soul result.
+     * Find all group of metadata.
      *
      * @return the soul result
      */
@@ -93,7 +93,7 @@ public class MetaDataController {
     }
 
     /**
-     * Detail app auth soul result.
+     * Get detail of metadata.
      *
      * @param id the id
      * @return the soul result
@@ -105,7 +105,7 @@ public class MetaDataController {
     }
 
     /**
-     * Create or update soul result.
+     * Create or update metadata.
      *
      * @param metaDataDTO the meta data dto
      * @return the soul result
@@ -120,7 +120,7 @@ public class MetaDataController {
     }
 
     /**
-     * Batch deleted soul result.
+     * Batch deleted metadata.
      *
      * @param ids the ids
      * @return the soul result
@@ -132,7 +132,7 @@ public class MetaDataController {
     }
 
     /**
-     * Batch enabled soul result.
+     * Batch enabled metadata.
      *
      * @param batchCommonDTO the batch common dto
      * @return the soul result
@@ -146,9 +146,8 @@ public class MetaDataController {
         return SoulAdminResult.success(SoulResultMessage.ENABLE_SUCCESS);
     }
 
-
     /**
-     * Sync data soul result.
+     * Sync metadata.
      *
      * @return the soul result
      */

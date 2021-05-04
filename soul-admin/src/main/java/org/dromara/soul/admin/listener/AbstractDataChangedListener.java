@@ -18,6 +18,7 @@
 package org.dromara.soul.admin.listener;
 
 import com.google.gson.reflect.TypeToken;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.dromara.soul.admin.service.AppAuthService;
 import org.dromara.soul.admin.service.MetaDataService;
@@ -34,8 +35,6 @@ import org.dromara.soul.common.enums.ConfigGroupEnum;
 import org.dromara.soul.common.enums.DataEventTypeEnum;
 import org.dromara.soul.common.utils.GsonUtils;
 import org.dromara.soul.common.utils.Md5Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.annotation.Resource;
@@ -47,12 +46,13 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Abstract class for ConfigEventListener.
  * As we think that the md5 value of the in-memory data is the same as the md5 value of the database,
- * although it may be a little different, but it doesn't matter, we will have thread to periodica
+ * although it may be a little different, but it doesn't matter, we will have thread to periodically
  * pull the data in the database.
  *
  * @author huangxiaofeng
  * @since 2.0.0
  */
+@Slf4j
 @SuppressWarnings("all")
 public abstract class AbstractDataChangedListener implements DataChangedListener, InitializingBean {
 
@@ -60,8 +60,6 @@ public abstract class AbstractDataChangedListener implements DataChangedListener
      * The constant CACHE.
      */
     protected static final ConcurrentMap<String, ConfigDataCache> CACHE = new ConcurrentHashMap<>();
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDataChangedListener.class);
 
     @Resource
     private AppAuthService appAuthService;
@@ -88,7 +86,7 @@ public abstract class AbstractDataChangedListener implements DataChangedListener
     private MetaDataService metaDataService;
 
     /**
-     * fetch configuration from database.
+     * fetch configuration from cache.
      *
      * @param groupKey the group key
      * @return the configuration data
@@ -226,13 +224,14 @@ public abstract class AbstractDataChangedListener implements DataChangedListener
     /**
      * if md5 is not the same as the original, then update lcoal cache.
      * @param group ConfigGroupEnum
+     * @param <T> the type of class
      * @param data the new config data
      */
     protected <T> void updateCache(final ConfigGroupEnum group, final List<T> data) {
         String json = GsonUtils.getInstance().toJson(data);
         ConfigDataCache newVal = new ConfigDataCache(group.name(), json, Md5Utils.md5(json), System.currentTimeMillis());
         ConfigDataCache oldVal = CACHE.put(newVal.getGroup(), newVal);
-        LOGGER.info("update config cache[{}], old:{}, updated:{}", group, oldVal, newVal);
+        log.info("update config cache[{}], old: {}, updated: {}", group, oldVal, newVal);
     }
 
     /**

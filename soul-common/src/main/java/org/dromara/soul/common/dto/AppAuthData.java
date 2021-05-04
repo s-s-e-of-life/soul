@@ -18,6 +18,7 @@
 package org.dromara.soul.common.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -34,13 +35,18 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class AppAuthData implements Serializable {
+
+    private static final long serialVersionUID = -7060944416765128601L;
 
     private String appKey;
 
     private String appSecret;
 
     private Boolean enabled;
+
+    private Boolean open;
 
     private List<AuthParamData> paramDataList;
 

@@ -17,57 +17,66 @@
 
 package org.dromara.soul.admin.service.impl;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.dromara.soul.admin.dto.SelectorConditionDTO;
-import org.dromara.soul.admin.dto.SelectorDTO;
-import org.dromara.soul.admin.entity.PluginDO;
-import org.dromara.soul.admin.entity.RuleDO;
-import org.dromara.soul.admin.entity.SelectorConditionDO;
-import org.dromara.soul.admin.entity.SelectorDO;
+import org.dromara.soul.admin.interceptor.annotation.DataPermission;
+import org.dromara.soul.admin.mapper.DataPermissionMapper;
+import org.dromara.soul.admin.model.dto.DataPermissionDTO;
+import org.dromara.soul.admin.model.dto.SelectorConditionDTO;
+import org.dromara.soul.admin.model.dto.SelectorDTO;
+import org.dromara.soul.admin.model.entity.DataPermissionDO;
+import org.dromara.soul.admin.model.entity.PluginDO;
+import org.dromara.soul.admin.model.entity.RuleDO;
+import org.dromara.soul.admin.model.entity.SelectorConditionDO;
+import org.dromara.soul.admin.model.entity.SelectorDO;
 import org.dromara.soul.admin.listener.DataChangedEvent;
 import org.dromara.soul.admin.mapper.PluginMapper;
 import org.dromara.soul.admin.mapper.RuleConditionMapper;
 import org.dromara.soul.admin.mapper.RuleMapper;
 import org.dromara.soul.admin.mapper.SelectorConditionMapper;
 import org.dromara.soul.admin.mapper.SelectorMapper;
-import org.dromara.soul.admin.page.CommonPager;
-import org.dromara.soul.admin.page.PageParameter;
-import org.dromara.soul.admin.page.PageResultUtils;
-import org.dromara.soul.admin.query.RuleConditionQuery;
-import org.dromara.soul.admin.query.RuleQuery;
-import org.dromara.soul.admin.query.SelectorConditionQuery;
-import org.dromara.soul.admin.query.SelectorQuery;
+import org.dromara.soul.admin.model.page.CommonPager;
+import org.dromara.soul.admin.model.page.PageResultUtils;
+import org.dromara.soul.admin.model.query.RuleConditionQuery;
+import org.dromara.soul.admin.model.query.RuleQuery;
+import org.dromara.soul.admin.model.query.SelectorConditionQuery;
+import org.dromara.soul.admin.model.query.SelectorQuery;
 import org.dromara.soul.admin.service.SelectorService;
 import org.dromara.soul.admin.transfer.ConditionTransfer;
-import org.dromara.soul.admin.vo.SelectorConditionVO;
-import org.dromara.soul.admin.vo.SelectorVO;
+import org.dromara.soul.admin.model.vo.SelectorConditionVO;
+import org.dromara.soul.admin.model.vo.SelectorVO;
+import org.dromara.soul.admin.utils.JwtUtils;
+import org.dromara.soul.common.constant.AdminConstants;
 import org.dromara.soul.common.dto.ConditionData;
 import org.dromara.soul.common.dto.SelectorData;
+import org.dromara.soul.common.dto.convert.DivideUpstream;
 import org.dromara.soul.common.enums.ConfigGroupEnum;
 import org.dromara.soul.common.enums.DataEventTypeEnum;
 import org.dromara.soul.common.enums.PluginEnum;
+import org.dromara.soul.common.utils.GsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * SelectorServiceImpl.
  *
  * @author jiangxiaofeng(Nicholas)
  * @author xiaoyu
+ * @author  nuo-promise
  */
 @Service("selectorService")
 public class SelectorServiceImpl implements SelectorService {
 
-    private SelectorMapper selectorMapper;
+    private final SelectorMapper selectorMapper;
 
-    private SelectorConditionMapper selectorConditionMapper;
+    private final SelectorConditionMapper selectorConditionMapper;
 
     private final RuleMapper ruleMapper;
 
@@ -75,7 +84,11 @@ public class SelectorServiceImpl implements SelectorService {
 
     private final PluginMapper pluginMapper;
 
+    private final DataPermissionMapper dataPermissionMapper;
+
     private final ApplicationEventPublisher eventPublisher;
+
+    private final UpstreamCheckService upstreamCheckService;
 
     @Autowired(required = false)
     public SelectorServiceImpl(final SelectorMapper selectorMapper,
@@ -83,13 +96,17 @@ public class SelectorServiceImpl implements SelectorService {
                                final PluginMapper pluginMapper,
                                final RuleMapper ruleMapper,
                                final RuleConditionMapper ruleConditionMapper,
-                               final ApplicationEventPublisher eventPublisher) {
+                               final ApplicationEventPublisher eventPublisher,
+                               final DataPermissionMapper dataPermissionMapper,
+                               final UpstreamCheckService upstreamCheckService) {
         this.selectorMapper = selectorMapper;
         this.selectorConditionMapper = selectorConditionMapper;
         this.pluginMapper = pluginMapper;
         this.ruleMapper = ruleMapper;
         this.ruleConditionMapper = ruleConditionMapper;
         this.eventPublisher = eventPublisher;
+        this.dataPermissionMapper = dataPermissionMapper;
+        this.upstreamCheckService = upstreamCheckService;
     }
 
     @Override
@@ -125,6 +142,15 @@ public class SelectorServiceImpl implements SelectorService {
                 selectorConditionDTO.setSelectorId(selectorDO.getId());
                 selectorConditionMapper.insertSelective(SelectorConditionDO.buildSelectorConditionDO(selectorConditionDTO));
             });
+            // check selector add
+            if (dataPermissionMapper.listByUserId(JwtUtils.getUserId()).size() > 0) {
+                DataPermissionDTO dataPermissionDTO = new DataPermissionDTO();
+                dataPermissionDTO.setUserId(JwtUtils.getUserId());
+                dataPermissionDTO.setDataId(selectorDO.getId());
+                dataPermissionDTO.setDataType(AdminConstants.SELECTOR_DATA_TYPE);
+                dataPermissionMapper.insertSelective(DataPermissionDO.buildPermissionDO(dataPermissionDTO));
+            }
+
         } else {
             selectorCount = selectorMapper.updateSelective(selectorDO);
             //delete rule condition then add
@@ -135,13 +161,14 @@ public class SelectorServiceImpl implements SelectorService {
                 selectorConditionMapper.insertSelective(selectorConditionDO);
             });
         }
-        PluginDO pluginDO = pluginMapper.selectById(selectorDO.getPluginId());
-        List<ConditionData> conditionDataList =
-                selectorConditionDTOs.stream().map(ConditionTransfer.INSTANCE::mapToSelectorDTO).collect(Collectors.toList());
-        // publish change event.
-        eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.SELECTOR, DataEventTypeEnum.UPDATE,
-                Collections.singletonList(SelectorDO.transFrom(selectorDO, pluginDO.getName(), conditionDataList))));
+        publishEvent(selectorDO, selectorConditionDTOs);
+        updateDivideUpstream(selectorDO);
         return selectorCount;
+    }
+
+    @Override
+    public int updateSelective(final SelectorDO selectorDO) {
+        return selectorMapper.updateSelective(selectorDO);
     }
 
     /**
@@ -155,28 +182,29 @@ public class SelectorServiceImpl implements SelectorService {
     public int delete(final List<String> ids) {
         for (String id : ids) {
 
-            SelectorDO selectorDO = selectorMapper.selectById(id);
-            PluginDO pluginDO = pluginMapper.selectById(selectorDO.getPluginId());
+            final SelectorDO selectorDO = selectorMapper.selectById(id);
+            final PluginDO pluginDO = pluginMapper.selectById(selectorDO.getPluginId());
 
             selectorMapper.delete(id);
             selectorConditionMapper.deleteByQuery(new SelectorConditionQuery(id));
+            dataPermissionMapper.deleteByDataId(id);
 
             //if divide selector delete
             if (PluginEnum.DIVIDE.getName().equals(pluginDO.getName())) {
                 UpstreamCheckService.removeByKey(selectorDO.getName());
             }
 
-            //发送删除选择器事件
+            // publish delete event of Selector
             eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.SELECTOR, DataEventTypeEnum.DELETE,
                     Collections.singletonList(SelectorDO.transFrom(selectorDO, pluginDO.getName(), null))));
 
-            //清除规则与规则条件
+            // delete rule and ruleCondition
             final List<RuleDO> ruleDOList = ruleMapper.selectByQuery(new RuleQuery(id, null));
             if (CollectionUtils.isNotEmpty(ruleDOList)) {
                 for (RuleDO ruleDO : ruleDOList) {
                     ruleMapper.delete(ruleDO.getId());
                     ruleConditionMapper.deleteByQuery(new RuleConditionQuery(ruleDO.getId()));
-                    //发送删除选择器事件
+                    // send delete selectors event
                     eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.RULE, DataEventTypeEnum.DELETE,
                             Collections.singletonList(RuleDO.transFrom(ruleDO, pluginDO.getName(), null))));
 
@@ -220,10 +248,14 @@ public class SelectorServiceImpl implements SelectorService {
      * @return {@linkplain CommonPager}
      */
     @Override
+    @DataPermission(dataType = AdminConstants.DATA_PERMISSION_SELECTOR)
     public CommonPager<SelectorVO> listByPage(final SelectorQuery selectorQuery) {
-        PageParameter pageParameter = selectorQuery.getPageParameter();
-        Integer count = selectorMapper.countByQuery(selectorQuery);
-        return PageResultUtils.result(pageParameter, count, () -> selectorMapper.selectByQuery(selectorQuery).stream().map(SelectorVO::buildSelectorVO).collect(Collectors.toList()));
+        return PageResultUtils.result(selectorQuery.getPageParameter(),
+            () -> selectorMapper.countByQuery(selectorQuery),
+            () -> selectorMapper.selectByQuery(selectorQuery)
+                        .stream()
+                        .map(SelectorVO::buildSelectorVO)
+                        .collect(Collectors.toList()));
     }
 
     @Override
@@ -254,12 +286,8 @@ public class SelectorServiceImpl implements SelectorService {
 
     private SelectorData buildSelectorData(final SelectorDO selectorDO) {
         // find conditions
-        List<ConditionData> conditionDataList = selectorConditionMapper
-                .selectByQuery(new SelectorConditionQuery(selectorDO.getId()))
-                .stream()
-                .filter(Objects::nonNull)
-                .map(ConditionTransfer.INSTANCE::mapToSelectorDO)
-                .collect(Collectors.toList());
+        List<ConditionData> conditionDataList = ConditionTransfer.INSTANCE.mapToSelectorDOS(
+                selectorConditionMapper.selectByQuery(new SelectorConditionQuery(selectorDO.getId())));
         PluginDO pluginDO = pluginMapper.selectById(selectorDO.getPluginId());
         if (Objects.isNull(pluginDO)) {
             return null;
@@ -267,4 +295,15 @@ public class SelectorServiceImpl implements SelectorService {
         return SelectorDO.transFrom(selectorDO, pluginDO.getName(), conditionDataList);
     }
 
+    private void updateDivideUpstream(final SelectorDO selectorDO) {
+        PluginDO pluginDO = pluginMapper.selectByName(PluginEnum.DIVIDE.getName());
+        if (Objects.nonNull(pluginDO) && pluginDO.getId().equals(selectorDO.getPluginId())) {
+            String selectorName = selectorDO.getName();
+            String handle = selectorDO.getHandle();
+            if (StringUtils.isNotBlank(handle)) {
+                List<DivideUpstream> existDivideUpstreams = GsonUtils.getInstance().fromList(handle, DivideUpstream.class);
+                upstreamCheckService.replace(selectorName, existDivideUpstreams);
+            }
+        }
+    }
 }

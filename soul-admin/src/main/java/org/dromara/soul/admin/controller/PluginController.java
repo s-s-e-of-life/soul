@@ -18,16 +18,17 @@
 package org.dromara.soul.admin.controller;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dromara.soul.admin.dto.BatchCommonDTO;
-import org.dromara.soul.admin.dto.PluginDTO;
-import org.dromara.soul.admin.page.CommonPager;
-import org.dromara.soul.admin.page.PageParameter;
-import org.dromara.soul.admin.query.PluginQuery;
-import org.dromara.soul.admin.result.SoulAdminResult;
+import org.dromara.soul.admin.model.dto.BatchCommonDTO;
+import org.dromara.soul.admin.model.dto.PluginDTO;
+import org.dromara.soul.admin.model.page.CommonPager;
+import org.dromara.soul.admin.model.page.PageParameter;
+import org.dromara.soul.admin.model.query.PluginQuery;
+import org.dromara.soul.admin.model.result.SoulAdminResult;
 import org.dromara.soul.admin.service.PluginService;
 import org.dromara.soul.admin.service.SyncDataService;
 import org.dromara.soul.admin.utils.SoulResultMessage;
-import org.dromara.soul.admin.vo.PluginVO;
+import org.dromara.soul.admin.model.vo.PluginVO;
+import org.dromara.soul.common.dto.PluginData;
 import org.dromara.soul.common.enums.DataEventTypeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -83,6 +84,16 @@ public class PluginController {
     }
 
     /**
+     * query All plugins.
+     * @return {@linkplain SoulAdminResult}
+     */
+    @GetMapping("/all")
+    public SoulAdminResult queryAllPlugins() {
+        List<PluginData> pluginDataList = pluginService.listAll();
+        return SoulAdminResult.success(SoulResultMessage.QUERY_SUCCESS, pluginDataList);
+    }
+
+    /**
      * detail plugin.
      *
      * @param id plugin id.
@@ -103,7 +114,7 @@ public class PluginController {
     @PostMapping("")
     public SoulAdminResult createPlugin(@RequestBody final PluginDTO pluginDTO) {
         String result = pluginService.createOrUpdate(pluginDTO);
-        if (StringUtils.isNoneBlank()) {
+        if (StringUtils.isNoneBlank(result)) {
             return SoulAdminResult.error(result);
         }
         return SoulAdminResult.success(SoulResultMessage.CREATE_SUCCESS);
@@ -143,7 +154,7 @@ public class PluginController {
     }
 
     /**
-     * Enable mono.
+     * Enable plugins.
      *
      * @param batchCommonDTO the batch common dto
      * @return the mono

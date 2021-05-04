@@ -21,17 +21,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.dromara.soul.common.constant.Constants;
 import org.dromara.soul.common.dto.RuleData;
 import org.dromara.soul.common.dto.SelectorData;
-import org.dromara.soul.common.dto.convert.rule.SpringCloudRuleHandle;
+import org.dromara.soul.common.dto.convert.rule.impl.SpringCloudRuleHandle;
 import org.dromara.soul.common.dto.convert.selector.SpringCloudSelectorHandle;
 import org.dromara.soul.common.enums.PluginEnum;
 import org.dromara.soul.common.enums.RpcTypeEnum;
-import org.dromara.soul.common.utils.GsonUtils;
 import org.dromara.soul.plugin.api.result.SoulResultEnum;
-import org.dromara.soul.plugin.base.utils.SoulResultWrap;
+import org.dromara.soul.plugin.base.utils.FallbackUtils;
+import org.dromara.soul.plugin.api.result.SoulResultWrap;
 import org.dromara.soul.plugin.api.SoulPluginChain;
 import org.dromara.soul.plugin.base.AbstractSoulPlugin;
 import org.dromara.soul.plugin.api.context.SoulContext;
-import org.dromara.soul.plugin.base.utils.WebFluxResultUtils;
+import org.dromara.soul.plugin.api.utils.WebFluxResultUtils;
+import org.dromara.soul.plugin.springcloud.cache.SpringCloudRuleHandleCache;
+import org.dromara.soul.plugin.springcloud.cache.SpringCloudSelectorHandleCache;
+import org.dromara.soul.plugin.springcloud.handler.SpringCloudPluginDataHandler;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.http.HttpMethod;
@@ -53,7 +56,7 @@ public class SpringCloudPlugin extends AbstractSoulPlugin {
     /**
      * Instantiates a new Spring cloud plugin.
      *
-     * @param loadBalancer      the load balancer
+     * @param loadBalancer the load balancer
      */
     public SpringCloudPlugin(final LoadBalancerClient loadBalancer) {
         this.loadBalancer = loadBalancer;
@@ -66,8 +69,8 @@ public class SpringCloudPlugin extends AbstractSoulPlugin {
         }
         final SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
         assert soulContext != null;
-        final SpringCloudRuleHandle ruleHandle = GsonUtils.getInstance().fromJson(rule.getHandle(), SpringCloudRuleHandle.class);
-        final SpringCloudSelectorHandle selectorHandle = GsonUtils.getInstance().fromJson(selector.getHandle(), SpringCloudSelectorHandle.class);
+        final SpringCloudRuleHandle ruleHandle = SpringCloudRuleHandleCache.getInstance().obtainHandle(SpringCloudPluginDataHandler.getRuleCacheKey(rule));
+        final SpringCloudSelectorHandle selectorHandle = SpringCloudSelectorHandleCache.getInstance().obtainHandle(selector.getId());
         if (StringUtils.isBlank(selectorHandle.getServiceId()) || StringUtils.isBlank(ruleHandle.getPath())) {
             Object error = SoulResultWrap.error(SoulResultEnum.CANNOT_CONFIG_SPRINGCLOUD_SERVICEID.getCode(), SoulResultEnum.CANNOT_CONFIG_SPRINGCLOUD_SERVICEID.getMsg(), null);
             return WebFluxResultUtils.result(exchange, error);
@@ -108,6 +111,16 @@ public class SpringCloudPlugin extends AbstractSoulPlugin {
     public Boolean skip(final ServerWebExchange exchange) {
         final SoulContext body = exchange.getAttribute(Constants.CONTEXT);
         return !Objects.equals(Objects.requireNonNull(body).getRpcType(), RpcTypeEnum.SPRING_CLOUD.getName());
+    }
+
+    @Override
+    protected Mono<Void> handleSelectorIsNull(final String pluginName, final ServerWebExchange exchange, final SoulPluginChain chain) {
+        return FallbackUtils.getNoSelectorResult(pluginName, exchange);
+    }
+
+    @Override
+    protected Mono<Void> handleRuleIsNull(final String pluginName, final ServerWebExchange exchange, final SoulPluginChain chain) {
+        return FallbackUtils.getNoRuleResult(pluginName, exchange);
     }
 
     private String buildRealURL(final String url, final String httpMethod, final String query) {

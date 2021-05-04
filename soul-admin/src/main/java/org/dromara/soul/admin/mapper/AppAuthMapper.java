@@ -19,8 +19,8 @@ package org.dromara.soul.admin.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.dromara.soul.admin.entity.AppAuthDO;
-import org.dromara.soul.admin.query.AppAuthQuery;
+import org.dromara.soul.admin.model.entity.AppAuthDO;
+import org.dromara.soul.admin.model.query.AppAuthQuery;
 
 import java.util.List;
 
@@ -114,7 +114,7 @@ public interface AppAuthMapper {
     int updateSelective(AppAuthDO appAuthDO);
 
     /**
-     * delete application authority.
+     * deleteSelector application authority.
      *
      * @param id primary key.
      * @return rows int

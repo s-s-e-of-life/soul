@@ -35,9 +35,39 @@ public interface Constants {
     String CONTEXT = "context";
 
     /**
+     * The constant context path.
+     */
+    String CONTEXT_PATH = "contextPath";
+
+    /**
      * The constant META_DATA.
      */
     String META_DATA = "metaData";
+
+    /**
+     * The constant HOST.
+     */
+    String HOST = "host";
+
+    /**
+     * The constant PORT.
+     */
+    String PORT = "port";
+
+    /**
+     * The constant rule name.
+     */
+    String RULE_NAME = "ruleName";
+
+    /**
+     * The constant service name.
+     */
+    String SERVICE_NAME = "serviceName";
+
+    /**
+     * The constant method name.
+     */
+    String METHOD_NAME = "methodName";
 
     /**
      * The constant CLIENT_RESPONSE_ATTR.
@@ -55,6 +85,26 @@ public interface Constants {
     String DUBBO_RPC_RESULT_EMPTY = "dubbo has not return value!";
 
     /**
+     * The constant DUBBO_TAG_ROUTE.
+     */
+    String DUBBO_TAG_ROUTE = "Dubbo_Tag_Route";
+
+    /**
+     * The constant DUBBO_REFRENCE_INVOKER.
+     */
+    String DUBBO_REFRENCE_INVOKER = "invoker";
+
+    /**
+     * The constant DUBBO_PROVIDER_VERSION.
+     */
+    String DUBBO_PROVIDER_VERSION = "release";
+
+    /**
+     * The constant DUBBO_PROVIDER_VERSION.
+     */
+    int DUBBO_SUPPORT_ASYNC_VERSION = 2070300;
+
+    /**
      * The constant SOFA_RPC_RESULT.
      */
     String SOFA_RPC_RESULT = "sofa_rpc_result";
@@ -63,6 +113,31 @@ public interface Constants {
      * The constant SOFA_RPC_RESULT_EMPTY.
      */
     String SOFA_RPC_RESULT_EMPTY = "sofa has not return value!";
+
+    /**
+     * The constant TARS_RPC_RESULT.
+     */
+    String TARS_RPC_RESULT = "tars_rpc_result";
+
+    /**
+     * The constant GRPC_RPC_RESULT.
+     */
+    String GRPC_RPC_RESULT = "grpc_rpc_result";
+
+    /**
+     * The constant MOTAN_RPC_RESULT.
+     */
+    String MOTAN_RPC_RESULT = "motan_rpc_result";
+
+    /**
+     * The constant TARS_RPC_RESULT_EMPTY.
+     */
+    String TARS_RPC_RESULT_EMPTY = "tars has not return value!";
+
+    /**
+     * The constant MOTAN_RPC_RESULT_EMPTY.
+     */
+    String MOTAN_RPC_RESULT_EMPTY = "motan has not return value!";
 
     /**
      * The constant CLIENT_RESPONSE_RESULT_TYPE.
@@ -80,6 +155,11 @@ public interface Constants {
     String HTTP_TIME_OUT = "httpTimeOut";
 
     /**
+     * The constant HTTP_RETRY.
+     */
+    String HTTP_RETRY = "httpRetry";
+
+    /**
      * Original response Content-Type attribute name.
      */
     String ORIGINAL_RESPONSE_CONTENT_TYPE_ATTR = "original_response_content_type";
@@ -90,14 +170,9 @@ public interface Constants {
     String HTTP_URL = "httpUrl";
 
     /**
-     * The constant DUBBO_PARAMS.
+     * The constant PARAM_TRANSFORM.
      */
-    String DUBBO_PARAMS = "dubbo_params";
-
-    /**
-     * The constant SOFA_PARAMS.
-     */
-    String SOFA_PARAMS = "sofa_params";
+    String PARAM_TRANSFORM = "param_transform";
 
     /**
      * The constant DECODE.
@@ -157,22 +232,22 @@ public interface Constants {
     /**
      * The constant SIGN_PARAMS_ERROR.
      */
-    String SIGN_PARAMS_ERROR = "认证参数传入不完整!";
+    String SIGN_PARAMS_ERROR = "sign parameters are incomplete!";
 
     /**
      * The constant SIGN_APP_KEY_IS_NOT_EXIST.
      */
-    String SIGN_APP_KEY_IS_NOT_EXIST = "认证签名APP_KEY,不存在";
+    String SIGN_APP_KEY_IS_NOT_EXIST = "sign appKey does not exist.";
 
     /**
      * The constant SIGN_PATH_NOT_EXIST.
      */
-    String SIGN_PATH_NOT_EXIST = "认证Key未配置路径获取未匹配";
+    String SIGN_PATH_NOT_EXIST = "you have not configured the sign path.";
 
     /**
      * The constant SIGN_VALUE_IS_ERROR.
      */
-    String SIGN_VALUE_IS_ERROR = "签名值错误！";
+    String SIGN_VALUE_IS_ERROR = "signature value is error!";
 
     /**
      * The constant TIMESTAMP.
@@ -259,6 +334,21 @@ public interface Constants {
      */
     String COLONS = ":";
 
+    /**
+     * The constant HYPHEN.
+     */
+    String HYPHEN = "-";
+
+    /**
+     * The constant SlASH.
+     */
+    String SLASH = "/";
+
+    /**
+     * The constant Period.
+     */
+    String PERIOD = ".";
+
     String REQUEST_LATENCY = "REQUEST_LATENCY";
 
     /**
@@ -341,6 +431,81 @@ public interface Constants {
      * circuitBreaker automaticTransitionFromOpenToHalfOpenEnabled.
      */
     boolean AUTOMATIC_TRANSITION_FROM_OPEN_TO_HALF_OPEN_ENABLED = false;
+
+    /**
+     * Enable the flow rule.
+     */
+    int SENTINEL_ENABLE_FLOW_RULE = 1;
+
+    /**
+     * Sentinel qps flow grade.
+     */
+    int SENTINEL_QPS_FLOW_GRADE = 1;
+
+    /**
+     * Sentinel flow reject behavior.
+     */
+    int SENTINEL_FLOW_REJECT = 0;
+
+    /**
+     * Enable the degrade rule.
+     */
+    int SENTINEL_ENABLE_DEGRADE_RULE = 1;
+
+    /**
+     * Sentinel response RT degrade rule.
+     */
+    int SENTINEL_RESPONSE_RULE_GRADE = 0;
+
+    /**
+     * default warmup.
+     */
+    int DEFAULT_WARMUP = 10 * 60 * 1000;
+
+    /**
+     * default register type.
+     */
+    String DEFAULT_REGISTER_TYPE = "http";
+
+    /**
+     * is checked.
+     */
+    String IS_CHECKED = "checked";
+
+    /**
+     * default checked value.
+     */
+    String DEFAULT_CHECK_VALUE = "true";
+
+    /**
+     * zombie check times.
+     */
+    String ZOMBIE_CHECK_TIMES = "zombieCheckTimes";
+
+    /**
+     * default zombie check times value.
+     */
+    String ZOMBIE_CHECK_TIMES_VALUE = "5";
+
+    /**
+     * scheduled time.
+     */
+    String SCHEDULED_TIME = "scheduledTime";
+
+    /**
+     * default scheduled time value.
+     */
+    String SCHEDULED_TIME_VALUE = "10";
+
+    /**
+     * default headerMaxSize value.
+     */
+    int HEADER_MAX_SIZE = 10240;
+
+    /**
+     * default requestMaxSize value.
+     */
+    int REQUEST_MAX_SIZE = 102400;
 
     /**
      * String q.

@@ -17,12 +17,13 @@
 
 package org.dromara.soul.admin.listener.websocket;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.soul.admin.service.SyncDataService;
 import org.dromara.soul.admin.spring.SpringBeanUtils;
+import org.dromara.soul.admin.utils.ThreadLocalUtil;
 import org.dromara.soul.common.enums.DataEventTypeEnum;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
@@ -31,6 +32,7 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -41,14 +43,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @author huangxiaofeng
  * @since 2.0.0
  */
-@ServerEndpoint("/websocket")
+@Slf4j
+@ServerEndpoint(value = "/websocket", configurator = WebsocketConfigurator.class)
 public class WebsocketCollector {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebsocketCollector.class);
 
     private static final Set<Session> SESSION_SET = new CopyOnWriteArraySet<>();
 
-    private static Session session;
+    private static final String SESSION_KEY = "sessionKey";
 
     /**
      * On open.
@@ -57,8 +58,20 @@ public class WebsocketCollector {
      */
     @OnOpen
     public void onOpen(final Session session) {
-        LOGGER.info("websocket on open successful....");
+        log.info("websocket on client[{}] open successful....", getClientIp(session));
         SESSION_SET.add(session);
+    }
+
+    private static String getClientIp(final Session session) {
+        Map<String, Object> userProperties = session.getUserProperties();
+        if (MapUtils.isEmpty(userProperties)) {
+            return StringUtils.EMPTY;
+        }
+        Object ipObject = userProperties.get(WebsocketListener.CLIENT_IP_NAME);
+        if (null == ipObject) {
+            return StringUtils.EMPTY;
+        }
+        return ipObject.toString();
     }
 
     /**
@@ -70,8 +83,12 @@ public class WebsocketCollector {
     @OnMessage
     public void onMessage(final String message, final Session session) {
         if (message.equals(DataEventTypeEnum.MYSELF.name())) {
-            WebsocketCollector.session = session;
-            SpringBeanUtils.getInstance().getBean(SyncDataService.class).syncAll(DataEventTypeEnum.MYSELF);
+            try {
+                ThreadLocalUtil.put(SESSION_KEY, session);
+                SpringBeanUtils.getInstance().getBean(SyncDataService.class).syncAll(DataEventTypeEnum.MYSELF);
+            } finally {
+                ThreadLocalUtil.clear();
+            }
         }
     }
 
@@ -83,7 +100,8 @@ public class WebsocketCollector {
     @OnClose
     public void onClose(final Session session) {
         SESSION_SET.remove(session);
-        WebsocketCollector.session = null;
+        ThreadLocalUtil.clear();
+        log.warn("websocket close on client[{}]", getClientIp(session));
     }
 
     /**
@@ -95,8 +113,8 @@ public class WebsocketCollector {
     @OnError
     public void onError(final Session session, final Throwable error) {
         SESSION_SET.remove(session);
-        WebsocketCollector.session = null;
-        LOGGER.error("websocket collection error:", error);
+        ThreadLocalUtil.clear();
+        log.error("websocket collection on client[{}] error: ", getClientIp(session), error);
     }
 
     /**
@@ -108,20 +126,21 @@ public class WebsocketCollector {
     public static void send(final String message, final DataEventTypeEnum type) {
         if (StringUtils.isNotBlank(message)) {
             if (DataEventTypeEnum.MYSELF == type) {
-                try {
-                    session.getBasicRemote().sendText(message);
-                } catch (IOException e) {
-                    LOGGER.error("websocket send result is exception :", e);
+                Session session = (Session) ThreadLocalUtil.get(SESSION_KEY);
+                if (session != null) {
+                    sendMessageBySession(session, message);
                 }
-                return;
+            } else {
+                SESSION_SET.forEach(session -> sendMessageBySession(session, message));
             }
-            for (Session session : SESSION_SET) {
-                try {
-                    session.getBasicRemote().sendText(message);
-                } catch (IOException e) {
-                    LOGGER.error("websocket send result is exception :", e);
-                }
-            }
+        }
+    }
+
+    private static void sendMessageBySession(final Session session, final String message) {
+        try {
+            session.getBasicRemote().sendText(message);
+        } catch (IOException e) {
+            log.error("websocket send result is exception: ", e);
         }
     }
 }

@@ -18,15 +18,14 @@
 package org.dromara.soul.admin.service.impl;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dromara.soul.admin.dto.SoulDictDTO;
-import org.dromara.soul.admin.entity.SoulDictDO;
+import org.dromara.soul.admin.model.dto.SoulDictDTO;
+import org.dromara.soul.admin.model.entity.SoulDictDO;
 import org.dromara.soul.admin.mapper.SoulDictMapper;
-import org.dromara.soul.admin.page.CommonPager;
-import org.dromara.soul.admin.page.PageParameter;
-import org.dromara.soul.admin.page.PageResultUtils;
-import org.dromara.soul.admin.query.SoulDictQuery;
+import org.dromara.soul.admin.model.page.CommonPager;
+import org.dromara.soul.admin.model.page.PageResultUtils;
+import org.dromara.soul.admin.model.query.SoulDictQuery;
 import org.dromara.soul.admin.service.SoulDictService;
-import org.dromara.soul.admin.vo.SoulDictVO;
+import org.dromara.soul.admin.model.vo.SoulDictVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +37,7 @@ import java.util.stream.Collectors;
  * SoulDictServiceImpl.
  *
  * @author dengliming
+ * @author nuo-promise
  */
 @Service("soulDictService")
 public class SoulDictServiceImpl implements SoulDictService {
@@ -51,10 +51,9 @@ public class SoulDictServiceImpl implements SoulDictService {
 
     @Override
     public CommonPager<SoulDictVO> listByPage(final SoulDictQuery soulDictQuery) {
-        PageParameter pageParameter = soulDictQuery.getPageParameter();
-        Integer count = soulDictMapper.countByQuery(soulDictQuery);
-        return PageResultUtils.result(pageParameter, count, () ->
-                soulDictMapper.selectByQuery(soulDictQuery)
+        return PageResultUtils.result(soulDictQuery.getPageParameter(),
+            () -> soulDictMapper.countByQuery(soulDictQuery),
+            () -> soulDictMapper.selectByQuery(soulDictQuery)
                         .stream()
                         .map(SoulDictVO::buildSoulDictVO)
                         .collect(Collectors.toList()));
@@ -62,7 +61,7 @@ public class SoulDictServiceImpl implements SoulDictService {
 
     @Override
     public Integer createOrUpdate(final SoulDictDTO soulDictDTO) {
-        int count = 0;
+        int count;
         SoulDictDO soulDictDO = SoulDictDO.buildSoulDictDO(soulDictDTO);
         if (StringUtils.isEmpty(soulDictDTO.getId())) {
             count = soulDictMapper.insertSelective(soulDictDO);

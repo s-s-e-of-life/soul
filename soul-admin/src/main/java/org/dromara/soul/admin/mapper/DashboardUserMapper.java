@@ -19,8 +19,8 @@ package org.dromara.soul.admin.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.dromara.soul.admin.entity.DashboardUserDO;
-import org.dromara.soul.admin.query.DashboardUserQuery;
+import org.dromara.soul.admin.model.entity.DashboardUserDO;
+import org.dromara.soul.admin.model.query.DashboardUserQuery;
 
 import java.util.List;
 
@@ -39,6 +39,14 @@ public interface DashboardUserMapper {
      * @return {@linkplain DashboardUserDO}
      */
     DashboardUserDO selectById(String id);
+
+    /**
+     * select dashboard user by user name.
+     *
+     * @param userName user name
+     * @return {@linkplain DashboardUserDO}
+     */
+    DashboardUserDO selectByUserName(String userName);
 
     /**
      * find dashboard user by query.

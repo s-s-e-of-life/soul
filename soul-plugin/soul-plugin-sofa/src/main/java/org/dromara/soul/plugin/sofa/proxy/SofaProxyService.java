@@ -17,6 +17,7 @@
 
 package org.dromara.soul.plugin.sofa.proxy;
 
+import com.alipay.hessian.generic.model.GenericObject;
 import com.alipay.sofa.rpc.api.GenericService;
 import com.alipay.sofa.rpc.config.ConsumerConfig;
 import com.alipay.sofa.rpc.context.RpcInvokeContext;
@@ -31,7 +32,7 @@ import org.dromara.soul.common.constant.Constants;
 import org.dromara.soul.common.dto.MetaData;
 import org.dromara.soul.common.enums.ResultEnum;
 import org.dromara.soul.common.exception.SoulException;
-import org.dromara.soul.plugin.api.sofa.SofaParamResolveService;
+import org.dromara.soul.plugin.api.param.BodyParamResolveService;
 import org.dromara.soul.plugin.sofa.cache.ApplicationConfigCache;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -47,30 +48,30 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class SofaProxyService {
 
-    private final SofaParamResolveService sofaParamResolveService;
-
+    private final BodyParamResolveService bodyParamResolveService;
+    
     /**
      * Instantiates a new Sofa proxy service.
      *
-     * @param sofaParamResolveService the generic param resolve service
+     * @param bodyParamResolveService the body param resolve service
      */
-    public SofaProxyService(final SofaParamResolveService sofaParamResolveService) {
-        this.sofaParamResolveService = sofaParamResolveService;
+    public SofaProxyService(final BodyParamResolveService bodyParamResolveService) {
+        this.bodyParamResolveService = bodyParamResolveService;
     }
     
     /**
      * Generic invoker object.
      *
-     * @param body     the body
+     * @param body the body
      * @param metaData the meta data
      * @param exchange the exchange
      * @return the object
      * @throws SoulException the soul exception
      */
     public Mono<Object> genericInvoker(final String body, final MetaData metaData, final ServerWebExchange exchange) throws SoulException {
-        ConsumerConfig<GenericService> reference = ApplicationConfigCache.getInstance().get(metaData.getServiceName());
+        ConsumerConfig<GenericService> reference = ApplicationConfigCache.getInstance().get(metaData.getPath());
         if (Objects.isNull(reference) || StringUtils.isEmpty(reference.getInterfaceId())) {
-            ApplicationConfigCache.getInstance().invalidate(metaData.getServiceName());
+            ApplicationConfigCache.getInstance().invalidate(metaData.getPath());
             reference = ApplicationConfigCache.getInstance().initRef(metaData);
         }
         GenericService genericService = reference.refer();
@@ -78,7 +79,7 @@ public class SofaProxyService {
         if (null == body || "".equals(body) || "{}".equals(body) || "null".equals(body)) {
             pair = new ImmutablePair<>(new String[]{}, new Object[]{});
         } else {
-            pair = sofaParamResolveService.buildParameter(body, metaData.getParameterTypes());
+            pair = bodyParamResolveService.buildParameter(body, metaData.getParameterTypes());
         }
         CompletableFuture<Object> future = new CompletableFuture<>();
         RpcInvokeContext.getContext().setResponseCallback(new SofaResponseCallback<Object>() {
@@ -97,12 +98,14 @@ public class SofaProxyService {
                 future.completeExceptionally(e);
             }
         });
-        genericService.$invoke(metaData.getMethodName(), pair.getLeft(), pair.getRight());
+        genericService.$genericInvoke(metaData.getMethodName(), pair.getLeft(), pair.getRight());
         return Mono.fromFuture(future.thenApply(ret -> {
             if (Objects.isNull(ret)) {
                 ret = Constants.SOFA_RPC_RESULT_EMPTY;
             }
-            exchange.getAttributes().put(Constants.SOFA_RPC_RESULT, ret);
+
+            GenericObject genericObject = (GenericObject) ret;
+            exchange.getAttributes().put(Constants.SOFA_RPC_RESULT, genericObject.getFields());
             exchange.getAttributes().put(Constants.CLIENT_RESPONSE_RESULT_TYPE, ResultEnum.SUCCESS.getName());
             return ret;
         })).onErrorMap(SoulException::new);

@@ -20,6 +20,8 @@ package org.dromara.soul.admin.config;
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
+import org.apache.commons.lang3.StringUtils;
+import org.dromara.soul.admin.config.properties.NacosProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -46,15 +48,23 @@ public class NacosConfiguration {
     public ConfigService nacosConfigService(final NacosProperties nacosProp) throws Exception {
         Properties properties = new Properties();
         if (nacosProp.getAcm() != null && nacosProp.getAcm().isEnabled()) {
-            //使用阿里云ACM服务
+            // Use aliyun ACM service
             properties.put(PropertyKeyConst.ENDPOINT, nacosProp.getAcm().getEndpoint());
             properties.put(PropertyKeyConst.NAMESPACE, nacosProp.getAcm().getNamespace());
-            //使用子账户ACM管理权限
+            // Use subaccount ACM administrative authority
             properties.put(PropertyKeyConst.ACCESS_KEY, nacosProp.getAcm().getAccessKey());
             properties.put(PropertyKeyConst.SECRET_KEY, nacosProp.getAcm().getSecretKey());
         } else {
             properties.put(PropertyKeyConst.SERVER_ADDR, nacosProp.getUrl());
-            properties.put(PropertyKeyConst.NAMESPACE, nacosProp.getNamespace());
+            if (StringUtils.isNotBlank(nacosProp.getNamespace())) {
+                properties.put(PropertyKeyConst.NAMESPACE, nacosProp.getNamespace());
+            }
+            if (StringUtils.isNotBlank(nacosProp.getUsername())) {
+                properties.put(PropertyKeyConst.USERNAME, nacosProp.getUsername());
+            }
+            if (StringUtils.isNotBlank(nacosProp.getPassword())) {
+                properties.put(PropertyKeyConst.PASSWORD, nacosProp.getPassword());
+            }
         }
         return NacosFactory.createConfigService(properties);
     }

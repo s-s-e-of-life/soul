@@ -20,12 +20,11 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>soul-plugin</artifactId>
         <groupId>org.dromara</groupId>
-        <version>2.2.1</version>
+        <artifactId>soul-plugin</artifactId>
+        <version>2.3.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>soul-plugin-monitor</artifactId>
 
     <dependencies>
@@ -40,18 +39,15 @@
             <artifactId>soul-metrics-facade</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>org.dromara</groupId>
-            <artifactId>soul-metrics-prometheus</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.dromara</groupId>
-            <artifactId>soul-metrics-spi</artifactId>
-            <version>${project.version}</version>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
         </dependency>
-
     </dependencies>
-
 </project>

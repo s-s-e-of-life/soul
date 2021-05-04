@@ -17,10 +17,11 @@
 
 package org.dromara.soul.admin.transfer;
 
-import org.dromara.soul.admin.dto.MetaDataDTO;
-import org.dromara.soul.admin.entity.MetaDataDO;
-import org.dromara.soul.admin.vo.MetaDataVO;
+import org.dromara.soul.admin.model.dto.MetaDataDTO;
+import org.dromara.soul.admin.model.entity.MetaDataDO;
+import org.dromara.soul.admin.model.vo.MetaDataVO;
 import org.dromara.soul.common.dto.MetaData;
+import org.dromara.soul.register.common.dto.MetaDataRegisterDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -46,6 +47,14 @@ public interface MetaDataTransfer {
      * @return the meta data do
      */
     MetaDataDO mapToEntity(MetaDataDTO metaDataDTO);
+
+    /**
+     * Map to entity meta data do.
+     *
+     * @param metaDataDTO the meta data dto
+     * @return the meta data do
+     */
+    MetaDataDO mapRegisterDTOToEntity(MetaDataRegisterDTO metaDataDTO);
 
     /**
      * Map to data meta data.

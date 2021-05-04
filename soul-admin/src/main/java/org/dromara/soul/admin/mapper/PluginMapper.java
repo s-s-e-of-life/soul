@@ -18,8 +18,8 @@
 package org.dromara.soul.admin.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.dromara.soul.admin.entity.PluginDO;
-import org.dromara.soul.admin.query.PluginQuery;
+import org.dromara.soul.admin.model.entity.PluginDO;
+import org.dromara.soul.admin.model.query.PluginQuery;
 
 import java.util.List;
 
@@ -39,7 +39,6 @@ public interface PluginMapper {
      */
     PluginDO selectById(String id);
 
-
     /**
      * Select by name plugin do.
      *
@@ -47,6 +46,14 @@ public interface PluginMapper {
      * @return the plugin do
      */
     PluginDO selectByName(String name);
+
+    /**
+     * Select by names plugin do.
+     *
+     * @param names the names
+     * @return the plugins do
+     */
+    List<PluginDO> selectByNames(List<String> names);
 
     /**
      * select plugin by query.

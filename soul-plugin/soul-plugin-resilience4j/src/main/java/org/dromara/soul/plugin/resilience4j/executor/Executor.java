@@ -19,14 +19,13 @@ package org.dromara.soul.plugin.resilience4j.executor;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
-import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.soul.plugin.api.result.SoulResultEnum;
-import org.dromara.soul.plugin.base.utils.SoulResultWrap;
-import org.dromara.soul.plugin.base.utils.SpringBeanUtils;
+import org.dromara.soul.plugin.api.result.SoulResultWrap;
+import org.dromara.soul.plugin.api.utils.SpringBeanUtils;
+import org.dromara.soul.plugin.api.utils.WebFluxResultUtils;
 import org.dromara.soul.plugin.base.utils.UriUtils;
-import org.dromara.soul.plugin.base.utils.WebFluxResultUtils;
-import org.dromara.soul.plugin.resilience4j.Resilence4JPlugin;
+import org.dromara.soul.plugin.resilience4j.Resilience4JPlugin;
 import org.dromara.soul.plugin.resilience4j.conf.Resilience4JConf;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -34,6 +33,7 @@ import org.springframework.web.reactive.DispatcherHandler;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
@@ -85,7 +85,7 @@ public interface Executor {
         if (throwable instanceof TimeoutException) {
             exchange.getResponse().setStatusCode(HttpStatus.GATEWAY_TIMEOUT);
             error = SoulResultWrap.error(SoulResultEnum.SERVICE_TIMEOUT.getCode(), SoulResultEnum.SERVICE_TIMEOUT.getMsg(), null);
-        } else if (throwable instanceof Resilence4JPlugin.CircuitBreakerStatusCodeException) {
+        } else if (throwable instanceof Resilience4JPlugin.CircuitBreakerStatusCodeException) {
             return Mono.error(throwable);
         } else if (throwable instanceof CallNotPermittedException) {
             exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);

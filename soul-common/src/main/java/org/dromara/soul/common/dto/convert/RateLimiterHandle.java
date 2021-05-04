@@ -26,6 +26,11 @@ import lombok.Data;
  */
 @Data
 public class RateLimiterHandle {
+    
+    /**
+     * algorithm name.
+     */
+    private String algorithmName;
 
     /**
      * replenish rate.
@@ -36,10 +41,14 @@ public class RateLimiterHandle {
      * burst capacity.
      */
     private double burstCapacity;
+    
+    /**
+     * request count.
+     */
+    private double requestCount = 1.0;
 
     /**
      * loged.
      */
     private boolean loged;
-
 }

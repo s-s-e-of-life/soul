@@ -18,8 +18,10 @@
 package org.dromara.soul.plugin.alibaba.dubbo.subscriber;
 
 import com.google.common.collect.Maps;
+
 import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
+
 import org.dromara.soul.common.dto.MetaData;
 import org.dromara.soul.common.enums.RpcTypeEnum;
 import org.dromara.soul.plugin.alibaba.dubbo.cache.ApplicationConfigCache;
@@ -31,29 +33,30 @@ import org.dromara.soul.sync.data.api.MetaDataSubscriber;
  * @author xiaoyu
  */
 public class AlibabaDubboMetaDataSubscriber implements MetaDataSubscriber {
-    
+
     private static final ConcurrentMap<String, MetaData> META_DATA = Maps.newConcurrentMap();
-    
+
     @Override
     public void onSubscribe(final MetaData metaData) {
         if (RpcTypeEnum.DUBBO.getName().equals(metaData.getRpcType())) {
             MetaData exist = META_DATA.get(metaData.getPath());
-            if (Objects.isNull(META_DATA.get(metaData.getPath())) || Objects.isNull(ApplicationConfigCache.getInstance().get(metaData.getPath()))) {
-                //第一次初始化
+            if (Objects.isNull(exist) || Objects.isNull(ApplicationConfigCache.getInstance().get(metaData.getPath()))) {
+                // The first initialization
                 ApplicationConfigCache.getInstance().initRef(metaData);
             } else {
-                //有更新,只支持serviceName rpcExt parameterTypes methodName四种属性的更新，因为这四种属性会影响dubbo的调用；
-                if (!metaData.getServiceName().equals(exist.getServiceName())
-                        || !metaData.getRpcExt().equals(exist.getRpcExt())
-                        || !metaData.getParameterTypes().equals(exist.getParameterTypes())
-                        || !metaData.getMethodName().equals(exist.getMethodName())) {
+                // There are updates, which only support the update of four properties of serviceName rpcExt parameterTypes methodName,
+                // because these four properties will affect the call of Dubbo;
+                if (!Objects.equals(metaData.getServiceName(), exist.getServiceName())
+                        || !Objects.equals(metaData.getRpcExt(), exist.getRpcExt())
+                        || !Objects.equals(metaData.getParameterTypes(), exist.getParameterTypes())
+                        || !Objects.equals(metaData.getMethodName(), exist.getMethodName())) {
                     ApplicationConfigCache.getInstance().build(metaData);
                 }
             }
             META_DATA.put(metaData.getPath(), metaData);
         }
     }
-    
+
     @Override
     public void unSubscribe(final MetaData metaData) {
         if (RpcTypeEnum.DUBBO.getName().equals(metaData.getRpcType())) {

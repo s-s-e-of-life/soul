@@ -20,24 +20,27 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>soul-client</artifactId>
         <groupId>org.dromara</groupId>
-        <version>2.2.1</version>
+        <artifactId>soul-client</artifactId>
+        <version>2.3.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>soul-client-sofa</artifactId>
 
+    <properties>
+       <runtime-sofa-boot-starter.version>3.1.4</runtime-sofa-boot-starter.version> 
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.dromara</groupId>
-            <artifactId>soul-client-common</artifactId>
+            <artifactId>soul-client-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>runtime-sofa-boot-starter</artifactId>
-            <version>3.1.4</version>
+            <version>${runtime-sofa-boot-starter.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -61,6 +64,4 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
-
 </project>

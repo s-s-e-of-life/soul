@@ -17,15 +17,22 @@
 
 package org.dromara.soul.plugin.monitor;
 
+import org.dromara.soul.common.constant.Constants;
 import org.dromara.soul.common.dto.RuleData;
 import org.dromara.soul.common.dto.SelectorData;
 import org.dromara.soul.common.enums.PluginEnum;
-import org.dromara.soul.metrics.enums.MetricsLabelEnum;
-import org.dromara.soul.metrics.facade.MetricsTrackerFacade;
+import org.dromara.soul.common.utils.DateUtils;
+import org.dromara.soul.metrics.prometheus.register.PrometheusMetricsRegister;
+import org.dromara.soul.metrics.reporter.MetricsReporter;
 import org.dromara.soul.plugin.api.SoulPluginChain;
+import org.dromara.soul.plugin.api.context.SoulContext;
 import org.dromara.soul.plugin.base.AbstractSoulPlugin;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * the monitor plugin.
@@ -33,13 +40,30 @@ import reactor.core.publisher.Mono;
  * @author xiaoyu(Myth)
  */
 public class MonitorPlugin extends AbstractSoulPlugin {
-
+    
+    private static final String REQUEST_TOTAL = "soul_request_total";
+    
+    private static final String HTTP_REQUEST_TOTAL = "soul_http_request_total";
+    
+    private static final String EXECUTE_LATENCY_NAME = "soul_execute_latency_millis";
+    
+    static {
+        MetricsReporter.register(new PrometheusMetricsRegister());
+        MetricsReporter.registerCounter(REQUEST_TOTAL, "soul request total count");
+        MetricsReporter.registerCounter(HTTP_REQUEST_TOTAL, new String[]{"path", "type"}, "soul http request type total count");
+        MetricsReporter.registerHistogram(EXECUTE_LATENCY_NAME, "the soul executor latency millis");
+    }
+    
     @Override
     protected Mono<Void> doExecute(final ServerWebExchange exchange, final SoulPluginChain chain, final SelectorData selector, final RuleData rule) {
-        MetricsTrackerFacade.getInstance().counterInc(MetricsLabelEnum.HTTP_REQUEST_TOTAL.getName(), exchange.getRequest().getURI().getPath(), exchange.getRequest().getMethodValue());
-        return chain.execute(exchange);
+        MetricsReporter.counterIncrement(REQUEST_TOTAL);
+        MetricsReporter.counterIncrement(HTTP_REQUEST_TOTAL, new String[]{exchange.getRequest().getURI().getPath(), exchange.getRequest().getMethodValue()});
+        SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
+        LocalDateTime startDateTime = Optional.ofNullable(soulContext).map(SoulContext::getStartDateTime).orElse(LocalDateTime.now());
+        return chain.execute(exchange).doOnSuccess(e -> responseCommitted(exchange, startDateTime))
+                .doOnError(throwable -> responseCommitted(exchange, startDateTime));
     }
-
+    
     @Override
     public int getOrder() {
         return PluginEnum.MONITOR.getCode();
@@ -49,5 +73,21 @@ public class MonitorPlugin extends AbstractSoulPlugin {
     public String named() {
         return PluginEnum.MONITOR.getName();
     }
-
+    
+    private void responseCommitted(final ServerWebExchange exchange, final LocalDateTime startDateTime) {
+        ServerHttpResponse response = exchange.getResponse();
+        if (response.isCommitted()) {
+            recordTime(startDateTime);
+        } else {
+            response.beforeCommit(() -> {
+                recordTime(startDateTime);
+                return Mono.empty();
+            });
+        }
+    }
+    
+    private void recordTime(final LocalDateTime startDateTime) {
+        long millisBetween = DateUtils.acquireMillisBetween(startDateTime, LocalDateTime.now());
+        MetricsReporter.recordTime(EXECUTE_LATENCY_NAME, millisBetween);
+    }
 }
